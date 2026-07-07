@@ -2,6 +2,14 @@
 
 Projeto Final da disciplina MC322 Programação Orientada a Objetos do 1º semestre de 2026, dada pelo Prof. Marcos Medeiros Raimundo. O negócio escolhido foi o de e-commerce.
 
+Grupo:
+
+Filipe Mazeliah Do Nascimento 270036
+
+Joelson Costa Silva 218999
+
+Vitor Juliani 255931
+
 ------------------------------------------------------------------------------------
 
 # Ecossistema de Componentes Robustos
