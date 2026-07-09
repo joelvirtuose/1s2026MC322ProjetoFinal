@@ -2,7 +2,7 @@ package com.ecommerce.model.entity;
 
 import com.ecommerce.exception.InsufficientStockException;
 
-public class Product {
+public class Product implements Entity {
     private final String id; // Associação estritamente por ID
     private final String name;
     private final double price;
