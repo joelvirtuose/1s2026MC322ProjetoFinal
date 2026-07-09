@@ -27,6 +27,14 @@ public class Marketplace {
      * @param product
      */
     public void saveProduct(Product product) {
-        productRepository.productRepository.save(product);
+        productRepository.save(product);
+    }
+
+    /**
+     * Retorna a lista de todos os produtos disponíveis no catálogo.
+     * Delega a requisição para a camada de persistência.
+     */
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
     }
 }
