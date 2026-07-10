@@ -37,4 +37,18 @@ public class Marketplace {
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
+
+    /**
+     * Endpoint de Checkout: Recebe os dados brutos da View e converte em Comandos de Domínio.
+     * @param userId O ID do usuário logado.
+     * @param items Um mapa contendo ID do produto como chave e Quantidade como valor.
+     */
+    public void checkout(String userId, Map<String, Integer> items) {
+        // TODO (Integrante B): Criar o CreateOrderCommand e invocar o CreateOrderHandler
+        
+        // Simulação provisória para que o Integrante C consiga testar o fluxo da CLI
+        System.out.println("[DEBUG MARKETPLACE] Recebendo pedido do utilizador: " + userId);
+        System.out.println("[DEBUG MARKETPLACE] Itens do pedido: " + items.toString());
+        System.out.println("[DEBUG MARKETPLACE] Encaminhando para Handlers de Domínio...");
+    }
 }
