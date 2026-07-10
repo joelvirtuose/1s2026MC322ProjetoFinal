@@ -5,6 +5,9 @@ import com.ecommerce.model.entity.Product;
 import com.ecommerce.service.persistence.JsonlRepository;
 import com.ecommerce.service.persistence.Repository;
 
+import java.util.List;
+import java.util.Map;
+
 public class Marketplace {
     private final Repository<Product, String> productRepository;
 
