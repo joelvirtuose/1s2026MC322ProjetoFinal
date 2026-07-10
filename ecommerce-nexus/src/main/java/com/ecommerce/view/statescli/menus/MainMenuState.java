@@ -33,6 +33,9 @@ public class MainMenuState implements ViewState {
         switch (choice) {
             case "1":
                 return new ProductCatalogState(marketplace, loggedUser);
+            case "2":
+                // Nova transição de estado para o Carrinho de Compras
+                return new CheckoutState(marketplace, loggedUser);
             case "3":
                 prompt.printInfo("A encerrar sessão de " + loggedUser + "...");
                 return new LoginState(marketplace); // Retorna com segurança à estaca zero
