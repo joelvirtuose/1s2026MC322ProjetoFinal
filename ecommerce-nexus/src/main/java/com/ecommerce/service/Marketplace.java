@@ -2,6 +2,7 @@ package com.ecommerce.service;
 
 import com.google.gson.Gson;
 import com.ecommerce.model.entity.Product;
+import com.ecommerce.model.entity.Order;
 import com.ecommerce.service.persistence.JsonlRepository;
 import com.ecommerce.service.persistence.Repository;
 
@@ -10,10 +11,12 @@ import java.util.Map;
 
 public class Marketplace {
     private final Repository<Product, String> productRepository;
+    private final Repository<Order, String> orderRepository;
 
     public Marketplace(Gson gson) {
         // Inicializa disparando automaticamente a reidratação cronológica do log histórico
         this.productRepository = new JsonlRepository<>("data/products.jsonl", Product.class, gson);
+        this.orderRepository = new JsonlRepository<>("data/orders.jsonl", Order.class, gson);
     }
 
     /**
@@ -53,5 +56,21 @@ public class Marketplace {
         System.out.println("[DEBUG MARKETPLACE] Recebendo pedido do utilizador: " + userId);
         System.out.println("[DEBUG MARKETPLACE] Itens do pedido: " + items.toString());
         System.out.println("[DEBUG MARKETPLACE] Encaminhando para Handlers de Domínio...");
+    }
+
+    /**
+     * 
+     * @param id
+     */
+    public Order getOrder(String id) {
+        return orderRepository.findById(id);
+    }
+
+    /**
+     * 
+     * @param order
+     */
+    public void saveOrder(Order order) {
+        orderRepository.save(order);
     }
 }
