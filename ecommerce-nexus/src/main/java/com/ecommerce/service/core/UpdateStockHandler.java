@@ -10,9 +10,14 @@ import com.ecommerce.exception.InsufficientStockException;
  * @param productId
  * @param quantity
  */
-record DeductStockCommand(String productId, int quantity) {}
+record DeductStockCommand(String productId, int quantity) implements Command {}
 
 public class UpdateStockHandler {
+    private final Marketplace marketplace;
+
+    public UpdateStockHandler(Marketplace marketplace) {
+        this.marketplace = marketplace;
+    }
     
     /**
      * 
@@ -20,7 +25,7 @@ public class UpdateStockHandler {
      * @param marketplace
      * @throws InsufficientStockException
      */
-    public void execute(DeductStockCommand cmd, Marketplace marketplace) throws InsufficientStockException {
+    public void execute(DeductStockCommand cmd) throws InsufficientStockException {
         // 1. Fetch: Resolve o estado em memória cache
         Product product = marketplace.getProduct(cmd.productId());
         if (product == null) {
