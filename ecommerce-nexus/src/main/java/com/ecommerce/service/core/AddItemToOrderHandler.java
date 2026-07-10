@@ -4,6 +4,8 @@ import com.ecommerce.service.Marketplace;
 import com.ecommerce.model.entity.Order;
 import com.ecommerce.model.entity.Product;
 import com.ecommerce.model.valueobject.OrderItem;
+import com.ecommerce.exception.EntityNotFoundException;
+import com.ecommerce.exception.InvalidOrderStateException;
 import com.ecommerce.exception.InsufficientStockException;
 
 public class AddItemToOrderHandler {
@@ -17,15 +19,15 @@ public class AddItemToOrderHandler {
         // 1. FETCH: Localiza o Pedido e o Produto nos respectivos caches através da Fachada
         Order order = marketplace.getOrder(cmd.orderId());
         if (order == null) {
-            throw new IllegalArgumentException("Pedido não localizado para o ID informado.");
+            throw new EntityNotFoundException("Pedido ID '" + cmd.orderId() + "' não foi localizado.");
         }
         if (!"CARRINHO_ABERTO".equals(order.getStatus())) {
-            throw new IllegalStateException("Não é possível adicionar itens a um pedido fechado ou finalizado.");
+            throw new InvalidOrderStateException("Operação negada: O pedido " + cmd.orderId() + " já se encontra " + order.getStatus() + ".");
         }
 
         Product product = marketplace.getProduct(cmd.productId());
         if (product == null) {
-            throw new IllegalArgumentException("Produto não localizado no catálogo.");
+            throw new EntityNotFoundException("Produto ID '" + cmd.productId() + "' não existe no catálogo.");
         }
 
         // 2. PURE MUTATION: Deduz o estoque do produto gerando uma nova cópia imutável (Fail-Fast interno)
