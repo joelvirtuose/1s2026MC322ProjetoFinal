@@ -2,11 +2,13 @@ package com.ecommerce.view;
 
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.impl.completer.AggregateCompleter;
 import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,6 +18,9 @@ import java.util.List;
 public class PromptService {
     private Terminal terminal;
     private LineReader lineReader;
+
+    // Lista dinâmica mutável associada ao leitor persistente do terminal
+    private final List<StringsCompleter> dynamicCompleters = new ArrayList<>();
 
     // Códigos ANSI para cores no terminal
     private static final String RESET = "\u001B[0m";
@@ -29,9 +34,10 @@ public class PromptService {
             // Constrói o terminal capturando o console nativo do Sistema Operacional
             this.terminal = TerminalBuilder.builder().system(true).build();
             
-            // Inicializa o leitor padrão
+            // Cria um agregador que observa referências mutáveis sem precisar recriar o LineReader
             this.lineReader = LineReaderBuilder.builder()
                     .terminal(terminal)
+                    .completer(new AggregateCompleter(dynamicCompleters))
                     .build();
         } catch (IOException e) {
             System.err.println("Erro crítico ao inicializar o terminal interativo: " + e.getMessage());
@@ -81,10 +87,11 @@ public class PromptService {
         return lineReader.readLine(prompt).trim();
     }
 
+    /**
+     * ATUALIZAÇÃO SEGURA: Altera o comportamento do autocompletar sem quebrar o estado interno da thread do JLine
+     */
     public void setActiveCompleter(StringsCompleter completer) {
-        this.lineReader = LineReaderBuilder.builder()
-                .terminal(this.terminal)
-                .completer(completer)
-                .build();
+        this.dynamicCompleters.clear();
+        this.dynamicCompleters.add(completer);
     }
 }
