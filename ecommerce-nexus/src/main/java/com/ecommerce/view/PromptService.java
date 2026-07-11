@@ -55,7 +55,21 @@ public class PromptService {
     }
 
     public String readString(String promptLabel) {
-        return lineReader.readLine(promptLabel).trim();
+        while (true) {
+            String input = lineReader.readLine(promptLabel);
+            
+            // Tratamento contra interrupções do usuário (Ctrl+D)
+            if (input == null) {
+                return "";
+            }
+            
+            input = input.trim();
+            
+            // Se o usuário apenas apertou ENTER, ignoramos o lixo do buffer e reoferecemos o prompt
+            if (!input.isEmpty()) {
+                return input;
+            }
+        }
     }
 
     public void clearScreen() {
