@@ -1,8 +1,7 @@
-package com;
+package com.ecommerce;
 
 import com.google.gson.Gson;
 import com.ecommerce.service.Marketplace;
-import com.ecommerce.view.PromptService;
 import com.ecommerce.view.NexusCLI;
 
 /**
@@ -19,13 +18,7 @@ public class Main {
         // Ao nascer, ela dispara automaticamente a reidratação do banco log .jsonl
         Marketplace marketplace = new Marketplace(gson);
 
-        // 3. Inicializa o serviço visual rica do terminal (View / JLine)
-        PromptService promptService = new PromptService();
-
-        // 4. Inicializa o orquestrador do loop de menus (CLI), injetando suas dependências
-        NexusCLI cli = new NexusCLI(promptService, marketplace);
-
-        // 5. Transfere o controle da Thread principal para o loop polimórfico da CLI
+       NexusCLI cli = new NexusCLI(marketplace);
         cli.run();
     }
 }
