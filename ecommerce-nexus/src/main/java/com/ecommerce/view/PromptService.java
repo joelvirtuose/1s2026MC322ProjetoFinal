@@ -19,15 +19,26 @@ import java.util.stream.Collectors;
 public class PromptService {
     private Terminal terminal;
     private LineReader lineReader;
+    // Mantemos uma lista dinâmica de completers na memória do serviço
+    private final List<Completer> dynamicCompleters;
 
     public PromptService() {
         try {
             // Constrói o terminal capturando o console nativo do Sistema Operacional
             this.terminal = TerminalBuilder.builder().system(true).build();
+            this.dynamicCompleters = new ArrayList<>();
+
+            // Criamos o aggregate completer acoplado à nossa lista mutável
+            Completer rootCompleter = (reader, line, candidates) -> {
+                for (Completer c : dynamicCompleters) {
+                    c.complete(reader, line, candidates);
+                }
+            };
             
-            // Inicializador padrão sem comandos de autocompletar iniciais
+            // O lineReader é construído APENAS UMA VEZ aqui
             this.lineReader = LineReaderBuilder.builder()
                     .terminal(terminal)
+                    .completer(rootCompleter)
                     .build();
         } catch (IOException e) {
             throw new RuntimeException("Não foi possível inicializar o terminal JLine", e);
@@ -39,19 +50,10 @@ public class PromptService {
      * Resolve o erro de tipagem forçando a conversão limpa para array de interfaces.
      */
     public void updateCompleters(List<String> commands) {
-        if (commands == null || commands.isEmpty()) return;
-        
-        List<StringsCompleter> stringsCompleters = commands.stream()
-                .map(StringsCompleter::new)
-                .collect(Collectors.toList());
-
-        // Solução crucial de conversão de tipos para evitar o erro do "varargs mismatch" do Maven
-        Completer aggregate = new AggregateCompleter(stringsCompleters.toArray(new Completer[0]));
-        
-        this.lineReader = LineReaderBuilder.builder()
-                .terminal(this.terminal)
-                .completer(aggregate)
-                .build();
+        this.dynamicCompleters.clear();
+        if (commands != null && !commands.isEmpty()) {
+            this.dynamicCompleters.add(new StringsCompleter(commands));
+        }
     }
 
     public String readString(String promptLabel) {
