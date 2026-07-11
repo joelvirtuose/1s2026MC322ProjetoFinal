@@ -3,6 +3,7 @@ package com.ecommerce.view.statescli.menus;
 import com.ecommerce.view.PromptService;
 import com.ecommerce.view.statescli.ViewState;
 import com.ecommerce.service.Marketplace;
+import com.ecommerce.model.entity.User;
 import java.util.List;
 
 public class LoginState implements ViewState {
@@ -16,31 +17,32 @@ public class LoginState implements ViewState {
     public void renderHeader(PromptService prompt) {
         prompt.clearScreen();
         prompt.printHeader("NEXUS E-COMMERCE // AUTENTICAÇÃO");
-        prompt.printInfo("Por favor, introduza o seu identificador ou e-mail cadastrado para aceder.");
+        prompt.printInfo("Introduza o e-mail cadastrado para aceder (ex: joelson@nexus.com).");
         prompt.printFooter();
     }
 
     @Override
     public ViewState handleInput(PromptService prompt) {
-        String input = prompt.readMenuOption("Utilizador/E-mail: ");
+        String input = prompt.readMenuOption("E-mail: ");
 
-        if (input.equalsIgnoreCase("sair")) {
-            return null; // Encerra graciosamente a aplicação
-        }
+        if (input.equalsIgnoreCase("sair")) return null;
 
         if (input.isBlank()) {
-            prompt.printWarning("O identificador não pode ser vazio.");
+            prompt.printWarning("O e-mail não pode ser vazio.");
             prompt.readString("Pressione ENTER para tentar novamente...");
-            return this; // Permanece no mesmo estado de login
+            return this;
         }
 
-        // Simulação de autenticação baseada nas diretrizes do laboratório
-        // Num fluxo real, consultaria o UserService do Marketplace pelo e-mail
-        prompt.printSuccess("Autenticação efetuada com sucesso! Bem-vindo, " + input);
-        prompt.readString("Pressione ENTER para entrar no painel principal...");
+        User user = marketplace.authenticate(input);
+        if (user == null) {
+            prompt.printError("Credenciais inválidas: e-mail não encontrado.");
+            prompt.readString("Pressione ENTER para tentar novamente...");
+            return this;
+        }
 
-        // Transiciona de forma polimórfica para o Menu Principal passando a Fachada
-        return new MainMenuState(marketplace, input);
+        prompt.printSuccess("Bem-vindo, " + user.getName() + " (" + user.getRole() + ")");
+        prompt.readString("Pressione ENTER para entrar no painel principal...");
+        return new MainMenuState(marketplace, user);
     }
 
     @Override
