@@ -40,7 +40,7 @@ public class CheckoutState implements ViewState {
     @Override
     public ViewState handleInput(PromptService prompt) {
         prompt.printInfo("Opções: [ID do Produto] para adicionar | [finalizar] para fechar pedido | [cancelar] para sair");
-        String input = prompt.readString("Comando > ");
+        String input = prompt.readMenuOption("Comando > ");
 
         // 1. Fluxo de Saída/Cancelamento
         if (input.equalsIgnoreCase("cancelar")) {
