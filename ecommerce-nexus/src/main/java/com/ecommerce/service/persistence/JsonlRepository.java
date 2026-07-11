@@ -23,8 +23,9 @@ public class JsonlRepository<T extends Entity> implements Repository<T, String> 
     private void rehydrate() {
         File file = new File(filePath);
         if (!file.exists()) {
-            // Garante a criação das pastas e do arquivo caso não existam
-            file.getParentFile().mkdirs();
+            if (file.getParentFile() != null) {
+                file.getParentFile().mkdirs();
+            }
             return;
         }
 
