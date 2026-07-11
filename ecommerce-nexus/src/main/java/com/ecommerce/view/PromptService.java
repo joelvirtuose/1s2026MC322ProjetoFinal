@@ -7,6 +7,8 @@ import org.jline.reader.impl.completer.AggregateCompleter;
 import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
+import org.jline.reader.UserInterruptException;
+import org.jline.reader.EndOfFileException;
 
 import java.io.IOException;
 import java.util.List;
@@ -58,31 +60,33 @@ public class PromptService {
     }
 
     public String readString(String promptLabel) {
-        String input = lineReader.readLine(promptLabel);
-        return input == null ? "" : input.trim();
+        try {
+            String input = lineReader.readLine(promptLabel);
+            return input == null ? "" : input.trim();
+        } catch (UserInterruptException | EndOfFileException e) {
+            // Captura o Ctrl+C/Ctrl+D e simula uma saída vazia ou comando de fechar
+            return "sair"; 
+        }
     }
 
     public String readMenuOption(String promptLabel) {
-        // 1. Tenta usar o mecanismo padrão do JLine
-        String input = lineReader.readLine(promptLabel);
-        if (input != null && !input.trim().isEmpty()) {
-            return input.trim();
+        try {
+            String input = lineReader.readLine(promptLabel);
+            if (input != null && !input.trim().isEmpty()) {
+                return input.trim();
+            }
+        } catch (UserInterruptException | EndOfFileException e) {
+            return "sair"; // Se o usuário interromper, joga o comando "sair" para o estado atual
         }
 
-        // 2. Fallback de Segurança: Se o JLine falhar em bloquear ou retornar vazio/null,
-        // usamos a barreira nativa do Sistema Operacional para forçar a retenção
+        // Mantém o Fallback nativo caso o JLine não bloqueie o terminal
         java.util.Scanner fallbackScanner = new java.util.Scanner(System.in);
         while (true) {
-            // Caso o loop tenha rodado sem imprimir o rótulo devido ao bypass do JLine
-            if (input == null || input.trim().isEmpty()) {
-                System.out.print(promptLabel);
-            }
-            
+            System.out.print(promptLabel);
             if (!fallbackScanner.hasNextLine()) {
-                return "";
+                return "sair";
             }
-            
-            input = fallbackScanner.nextLine().trim();
+            String input = fallbackScanner.nextLine().trim();
             if (!input.isEmpty()) {
                 return input;
             }
