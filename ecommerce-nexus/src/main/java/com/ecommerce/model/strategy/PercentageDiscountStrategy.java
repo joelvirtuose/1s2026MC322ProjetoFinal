@@ -1,6 +1,6 @@
 package com.ecommerce.model.strategy;
 
-public class PercentageDiscountStrategy implements DiscountStategy {
+public class PercentageDiscountStrategy implements DiscountStrategy {
     private final double percentage;
 
     public PercentageDiscountStrategy(double percentage) {
