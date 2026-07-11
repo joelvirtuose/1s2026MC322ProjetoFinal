@@ -11,7 +11,6 @@ import java.util.Map;
 public class CheckoutState implements ViewState {
     private final Marketplace marketplace;
     private final String loggedUser;
-    
     // Estado interno temporário do carrinho
     private final Map<String, Integer> cartItems;
 
@@ -79,9 +78,12 @@ public class CheckoutState implements ViewState {
             if (qtd <= 0) {
                 prompt.printWarning("A quantidade deve ser um número positivo.");
             } else {
-                // Adiciona o item ou soma a quantidade se o ID já existir no mapa
-                cartItems.put(input, cartItems.getOrDefault(input, 0) + qtd);
-                prompt.printSuccess("Produto inserido no carrinho!");
+                if (marketplace.getProduct(input) == null) {
+                    prompt.printError("Produto com ID '" + input + "' não existe no catálogo.");
+                } else {
+                    cartItems.put(input, cartItems.getOrDefault(input, 0) + qtd);
+                    prompt.printSuccess("Produto inserido no carrinho!");
+                }
             }
         } catch (NumberFormatException e) {
             prompt.printError("Quantidade inválida. Por favor, introduza um número inteiro.");
