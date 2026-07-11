@@ -1,7 +1,9 @@
 package com.ecommerce.model.entity;
 
 import com.ecommerce.exception.InsufficientStockException;
-
+import com.ecommerce.exception.InvalidDiscountException;
+import com.ecommerce.model.strategy.DiscountStategy;
+;
 public class Product implements Entity {
     private final String id; // Associação estritamente por ID
     private final String name;
@@ -38,6 +40,10 @@ public class Product implements Entity {
         return new Product(this.id, this.name, this.price, newStock);
     }
 
+    public Product withDiscount(DiscountStategy strategy) {
+        return new Product(this.id, this.name, calculateDiscountedPrice(strategy) , this.stockQuantity);
+    }
+
     /**
      * Regra de Negócio Rica incorporada na própria entidade (Evita Modelo Anêmico)
      * @param quantity
@@ -50,4 +56,28 @@ public class Product implements Entity {
         }
         return this.withStockQuantity(this.stockQuantity - quantity);
     }
+
+    /**
+     * Calcula o preço final aplicando a estratégia de desconto fornecida.
+     * Valida o resultado imediatamente (fail fast) para impedir estados inconsistentes.
+     * 
+     * @param strategy A estratégia de desconto a ser aplicada.
+     * @return O valor calculado após o desconto. 
+     */
+
+    public double calculateDiscountedPrice(DiscountStategy strategy) {
+        if (strategy == null) {
+            return this.price;
+        }
+
+        double finalPrice = strategy.calculate(this.price);
+
+        if (finalPrice < 0) {
+            throw new InvalidDiscountException("O preço final após o desconto não pode ser inferior a zero.");
+
+        }
+
+        return finalPrice;
+    }
+
 }
