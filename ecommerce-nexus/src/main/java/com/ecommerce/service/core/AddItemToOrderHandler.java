@@ -4,6 +4,7 @@ import com.ecommerce.service.Marketplace;
 import com.ecommerce.model.entity.Order;
 import com.ecommerce.model.entity.Product;
 import com.ecommerce.model.valueobject.OrderItem;
+import com.ecommerce.model.valueobject.OrderStatus;
 import com.ecommerce.exception.EntityNotFoundException;
 import com.ecommerce.exception.InvalidOrderStateException;
 import com.ecommerce.exception.InsufficientStockException;
