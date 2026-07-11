@@ -3,7 +3,7 @@ package com.ecommerce.model.entity;
 import com.ecommerce.exception.InsufficientStockException;
 import com.ecommerce.exception.InvalidDiscountException;
 import com.ecommerce.model.strategy.DiscountStategy;
-;
+
 public class Product implements Entity {
     private final String id; // Associação estritamente por ID
     private final String name;
@@ -79,5 +79,4 @@ public class Product implements Entity {
 
         return finalPrice;
     }
-
 }

@@ -12,5 +12,4 @@ public class PercentageDiscountStrategy implements DiscountStategy {
     public double calculate(double currentPrice) {
         return currentPrice - (currentPrice * (percentage/100));
     }
-    
 }
