@@ -37,7 +37,7 @@ public class PromptService {
             // Cria um agregador que observa referências mutáveis sem precisar recriar o LineReader
             this.lineReader = LineReaderBuilder.builder()
                     .terminal(terminal)
-                    .completer(new AggregateCompleter(dynamicCompleters))
+                    .completer(new AggregateCompleter(dynamicCompleters.toArray(new Completer[0])))
                     .build();
         } catch (IOException e) {
             System.err.println("Erro crítico ao inicializar o terminal interativo: " + e.getMessage());
