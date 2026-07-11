@@ -59,6 +59,14 @@ public class Product implements Entity {
         return this.withStockQuantity(this.stockQuantity - quantity);
     }
 
+     /**
+     * Consulta (sem efeito colateral) se há estoque suficiente para uma quantidade.
+     * Usada na validação prévia do checkout; a dedução autoritativa continua sendo deductStock.
+     */
+    public boolean hasSufficientStock(int quantity) {
+        return this.stockQuantity >= quantity;
+    }
+
     /**
      * Calcula o preço final aplicando a estratégia de desconto fornecida.
      * Valida o resultado imediatamente (fail fast) para impedir estados inconsistentes.

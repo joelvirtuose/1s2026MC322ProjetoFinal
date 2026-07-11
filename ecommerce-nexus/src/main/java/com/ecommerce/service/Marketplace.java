@@ -75,12 +75,27 @@ public class Marketplace {
     }
 
     // ---- Fluxo de negócio de checkout ----
-    public void checkout(String userId, Map<String, Integer> items) throws Exception {
+     public void checkout(String userId, Map<String, Integer> items) throws Exception {
         if (items == null || items.isEmpty()) {
             throw new com.ecommerce.exception.EmptyCartException("Não é possível fechar um pedido vazio.");
         }
-        String orderId = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
+        // FASE 1 - VALIDAÇÃO PRÉVIA: nenhum estado é alterado aqui.
+        // Só efetivamos o pedido se TODOS os itens existirem e tiverem estoque.
+        for (Map.Entry<String, Integer> entry : items.entrySet()) {
+            Product product = getProduct(entry.getKey());
+            if (product == null) {
+                throw new com.ecommerce.exception.EntityNotFoundException(
+                    "Produto ID '" + entry.getKey() + "' não existe no catálogo.");
+            }
+            if (!product.hasSufficientStock(entry.getValue())) {
+                throw new com.ecommerce.exception.InsufficientStockException(
+                    "Estoque insuficiente para o produto: " + product.getName());
+            }
+        }
+
+        // FASE 2 - EFETIVAÇÃO: só chega aqui se a fase 1 passou por completo.
+        String orderId = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         dispatch(new CreateOrderCommand(orderId, userId));
         for (Map.Entry<String, Integer> entry : items.entrySet()) {
             dispatch(new AddItemToOrderCommand(orderId, entry.getKey(), entry.getValue()));
