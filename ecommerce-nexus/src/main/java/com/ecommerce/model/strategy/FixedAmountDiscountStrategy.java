@@ -4,6 +4,7 @@ public class FixedAmountDiscountStrategy implements DiscountStategy{
     private final double discountAmount;
 
     public FixedAmountDiscountStrategy(double discountAmount) {
+        if (discountAmount < 0) throw new IllegalArgumentException("Desconto não pode ser negativo.");
         this.discountAmount = discountAmount;
     }
 
