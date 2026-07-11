@@ -10,6 +10,7 @@ import org.jline.terminal.TerminalBuilder;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 /**
@@ -62,11 +63,26 @@ public class PromptService {
     }
 
     public String readMenuOption(String promptLabel) {
+        // 1. Tenta usar o mecanismo padrão do JLine
+        String input = lineReader.readLine(promptLabel);
+        if (input != null && !input.trim().isEmpty()) {
+            return input.trim();
+        }
+
+        // 2. Fallback de Segurança: Se o JLine falhar em bloquear ou retornar vazio/null,
+        // usamos a barreira nativa do Sistema Operacional para forçar a retenção
+        java.util.Scanner fallbackScanner = new java.util.Scanner(System.in);
         while (true) {
-            String input = lineReader.readLine(promptLabel);
-            if (input == null) return "";
+            // Caso o loop tenha rodado sem imprimir o rótulo devido ao bypass do JLine
+            if (input == null || input.trim().isEmpty()) {
+                System.out.print(promptLabel);
+            }
             
-            input = input.trim();
+            if (!fallbackScanner.hasNextLine()) {
+                return "";
+            }
+            
+            input = fallbackScanner.nextLine().trim();
             if (!input.isEmpty()) {
                 return input;
             }
