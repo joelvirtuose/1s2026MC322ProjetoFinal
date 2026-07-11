@@ -5,7 +5,7 @@ import com.ecommerce.view.statescli.menus.LoginState;
 import com.ecommerce.service.Marketplace;
 
 public class NexusCLI {
-    private final PromptService promptService;
+    private final PromptService prompt;
     private ViewState currentState;
 
     public NexusCLI(Marketplace marketplace) {
