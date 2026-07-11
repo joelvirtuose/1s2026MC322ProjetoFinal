@@ -66,6 +66,9 @@ public class Marketplace {
      * @param items Um mapa contendo ID do produto como chave e Quantidade como valor.
      */
     public void checkout(String userId, Map<String, Integer> items) throws Exception {
+        if (items == null || items.isEmpty()) {
+            throw new com.ecommerce.exception.EmptyCardException("Não é possível fechar um pedido vazio.");
+        }
         // 1. Gera um ID estável único para o novo Pedido/Carrinho corporativo
         String orderId = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
@@ -80,7 +83,7 @@ public class Marketplace {
         }
         
         // 4. Altera o status do pedido para FINALIZADO
-        Order finalizedOrder = getOrder(orderId).withStatus("FINALIZADO");
+        Order finalizedOrder = getOrder(orderId).withStatus(OrderStatus.FINALIZADO);
         saveOrder(finalizedOrder);
     }
 }
