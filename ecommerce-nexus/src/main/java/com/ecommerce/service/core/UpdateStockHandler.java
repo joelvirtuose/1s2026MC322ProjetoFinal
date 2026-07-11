@@ -10,7 +10,7 @@ import com.ecommerce.exception.InsufficientStockException;
  * @param productId
  * @param quantity
  */
-record DeductStockCommand(String productId, int quantity) implements Command {}
+public record DeductStockCommand(String productId, int quantity) implements Command {}
 
 public class UpdateStockHandler {
     private final Marketplace marketplace;
