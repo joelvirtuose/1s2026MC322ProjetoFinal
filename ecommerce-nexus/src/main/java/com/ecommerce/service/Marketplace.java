@@ -3,6 +3,7 @@ package com.ecommerce.service;
 import com.google.gson.Gson;
 import com.ecommerce.model.entity.Product;
 import com.ecommerce.model.entity.Order;
+import com.ecommerce.model.valueobject.OrderStatus;
 import com.ecommerce.service.persistence.JsonlRepository;
 import com.ecommerce.service.persistence.Repository;
 import com.ecommerce.service.core.CreateOrderCommand;
