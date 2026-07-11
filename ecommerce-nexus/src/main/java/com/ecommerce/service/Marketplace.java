@@ -68,7 +68,7 @@ public class Marketplace {
      */
     public void checkout(String userId, Map<String, Integer> items) throws Exception {
         if (items == null || items.isEmpty()) {
-            throw new com.ecommerce.exception.EmptyCardException("Não é possível fechar um pedido vazio.");
+            throw new com.ecommerce.exception.EmptyCartException("Não é possível fechar um pedido vazio.");
         }
         // 1. Gera um ID estável único para o novo Pedido/Carrinho corporativo
         String orderId = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
