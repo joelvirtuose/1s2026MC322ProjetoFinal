@@ -19,6 +19,6 @@ public class Main {
         Marketplace marketplace = new Marketplace(gson);
 
        NexusCLI cli = new NexusCLI(marketplace);
-        cli.run();
+        cli.start();
     }
 }
