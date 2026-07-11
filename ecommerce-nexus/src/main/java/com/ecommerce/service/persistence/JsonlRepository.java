@@ -56,15 +56,32 @@ public class JsonlRepository<T extends Entity> implements Repository<T, String> 
     // 2. PERSISTÊNCIA APPEND-ONLY
     @Override
     public void save(T entity) {
-        String json = gson.toJson(entity);
-        try (FileWriter fw = new FileWriter(filePath, true); // 'true' ativa o modo append-only
-             PrintWriter out = new PrintWriter(new BufferedWriter(fw))) {
-            
-            out.println(json); // Consolida o snapshot de estado no log de disco
-            memoryCache.put(entity.getId(), entity); // Projeta o estado no cache de memória
-            
+        try {
+            ensureTrailingNewline(); // impede que dois objetos JSON grudem na mesma linha
+            String json = gson.toJson(entity);
+            try (FileWriter fw = new FileWriter(filePath, true);
+                 PrintWriter out = new PrintWriter(new BufferedWriter(fw))) {
+                out.println(json);
+                memoryCache.put(entity.getId(), entity);
+            }
         } catch (IOException e) {
             throw new RuntimeException("Falha ao persistir a entidade: " + entity.getId(), e);
+        }
+    }
+
+    /** Se o arquivo existe e não termina em '\n', anexa uma quebra antes do próximo registro. */
+    private void ensureTrailingNewline() throws IOException {
+        File file = new File(filePath);
+        if (!file.exists() || file.length() == 0) return;
+        boolean endsWithNewline;
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+            raf.seek(file.length() - 1);
+            endsWithNewline = (raf.read() == '\n');
+        }
+        if (!endsWithNewline) {
+            try (FileWriter fw = new FileWriter(filePath, true)) {
+                fw.write(System.lineSeparator());
+            }
         }
     }
 }

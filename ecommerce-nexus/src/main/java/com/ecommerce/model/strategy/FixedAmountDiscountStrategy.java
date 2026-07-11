@@ -1,6 +1,6 @@
 package com.ecommerce.model.strategy;
 
-public class FixedAmountDiscountStrategy implements DiscountStategy{
+public class FixedAmountDiscountStrategy implements DiscountStrategy{
     private final double discountAmount;
 
     public FixedAmountDiscountStrategy(double discountAmount) {

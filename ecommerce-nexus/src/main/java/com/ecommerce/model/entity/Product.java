@@ -2,7 +2,7 @@ package com.ecommerce.model.entity;
 
 import com.ecommerce.exception.InsufficientStockException;
 import com.ecommerce.exception.InvalidDiscountException;
-import com.ecommerce.model.strategy.DiscountStategy;
+import com.ecommerce.model.strategy.DiscountStrategy;
 import com.ecommerce.model.valueobject.Price;
 
 public class Product implements Entity {
@@ -42,7 +42,7 @@ public class Product implements Entity {
         return new Product(this.id, this.name, this.price.value(), newStock);
     }
 
-    public Product withDiscount(DiscountStategy strategy) {
+    public Product withDiscount(DiscountStrategy strategy) {
         return new Product(this.id, this.name, calculateDiscountedPrice(strategy) , this.stockQuantity);
     }
 
@@ -59,6 +59,14 @@ public class Product implements Entity {
         return this.withStockQuantity(this.stockQuantity - quantity);
     }
 
+     /**
+     * Consulta (sem efeito colateral) se há estoque suficiente para uma quantidade.
+     * Usada na validação prévia do checkout; a dedução autoritativa continua sendo deductStock.
+     */
+    public boolean hasSufficientStock(int quantity) {
+        return this.stockQuantity >= quantity;
+    }
+
     /**
      * Calcula o preço final aplicando a estratégia de desconto fornecida.
      * Valida o resultado imediatamente (fail fast) para impedir estados inconsistentes.
@@ -67,7 +75,7 @@ public class Product implements Entity {
      * @return O valor calculado após o desconto. 
      */
 
-    public double calculateDiscountedPrice(DiscountStategy strategy) {
+    public double calculateDiscountedPrice(DiscountStrategy strategy) {
         if (strategy == null) {
             return this.price.value();
         }
