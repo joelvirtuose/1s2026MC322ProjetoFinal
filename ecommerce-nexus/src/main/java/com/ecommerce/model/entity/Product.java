@@ -21,14 +21,14 @@ public class Product implements Entity {
     public Product(String id, String name, double price, int stockQuantity) {
         this.id = id;
         this.name = name;
-        this.price = price;
+        this.price = new Price(price);
         this.stockQuantity = stockQuantity;
     }
 
     // Getters limpos (Apenas Leitura)
     public String getId() { return id; }
     public String getName() { return name; }
-    public double getPrice() { return price; } // Retorna o tipo primitivo para compatibilidade de visualização
+    public double getPrice() { return price.value(); } // Retorna o tipo primitivo para compatibilidade de visualização
     public int getStockQuantity() { return stockQuantity; }
 
     /**
