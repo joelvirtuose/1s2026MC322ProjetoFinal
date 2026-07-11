@@ -3,11 +3,12 @@ package com.ecommerce.model.entity;
 import com.ecommerce.exception.InsufficientStockException;
 import com.ecommerce.exception.InvalidDiscountException;
 import com.ecommerce.model.strategy.DiscountStategy;
+import com.ecommerce.model.valueobject.Price;
 
 public class Product implements Entity {
     private final String id; // Associação estritamente por ID
     private final String name;
-    private final double price;
+    private final Price price; // Protegido encapsulando a lógica de dinheiro no Value Object
     private final int stockQuantity;
 
     /**
@@ -20,14 +21,14 @@ public class Product implements Entity {
     public Product(String id, String name, double price, int stockQuantity) {
         this.id = id;
         this.name = name;
-        this.price = price;
+        this.price = new Price(price);
         this.stockQuantity = stockQuantity;
     }
 
     // Getters limpos (Apenas Leitura)
     public String getId() { return id; }
     public String getName() { return name; }
-    public double getPrice() { return price; }
+    public double getPrice() { return price.value(); } // Retorna o tipo primitivo para compatibilidade de visualização
     public int getStockQuantity() { return stockQuantity; }
 
     /**
@@ -37,7 +38,8 @@ public class Product implements Entity {
      * @return
      */
     public Product withStockQuantity(int newStock) {
-        return new Product(this.id, this.name, this.price, newStock);
+        if (newStock < 0) throw new IllegalArgumentException("Estoque não pode ser negativo.");
+        return new Product(this.id, this.name, this.price.value(), newStock);
     }
 
     public Product withDiscount(DiscountStategy strategy) {
@@ -67,10 +69,10 @@ public class Product implements Entity {
 
     public double calculateDiscountedPrice(DiscountStategy strategy) {
         if (strategy == null) {
-            return this.price;
+            return this.price.value();
         }
 
-        double finalPrice = strategy.calculate(this.price);
+        double finalPrice = strategy.calculate(this.price.value());
 
         if (finalPrice < 0) {
             throw new InvalidDiscountException("O preço final após o desconto não pode ser inferior a zero.");

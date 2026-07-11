@@ -4,6 +4,7 @@ import com.ecommerce.service.Marketplace;
 import com.ecommerce.model.entity.Order;
 import com.ecommerce.model.entity.Product;
 import com.ecommerce.model.valueobject.OrderItem;
+import com.ecommerce.model.valueobject.OrderStatus;
 import com.ecommerce.exception.EntityNotFoundException;
 import com.ecommerce.exception.InvalidOrderStateException;
 import com.ecommerce.exception.InsufficientStockException;
@@ -21,8 +22,8 @@ public class AddItemToOrderHandler {
         if (order == null) {
             throw new EntityNotFoundException("Pedido ID '" + cmd.orderId() + "' não foi localizado.");
         }
-        if (!"CARRINHO_ABERTO".equals(order.getStatus())) {
-            throw new InvalidOrderStateException("Operação negada: O pedido " + cmd.orderId() + " já se encontra " + order.getStatus() + ".");
+        if (order.getStatus() != OrderStatus.CARRINHO_ABERTO) {
+            throw new InvalidOrderStateException("Operação negada: O pedido " + cmd.orderId() + " já se encontra em estado " + order.getStatus());
         }
 
         Product product = marketplace.getProduct(cmd.productId());

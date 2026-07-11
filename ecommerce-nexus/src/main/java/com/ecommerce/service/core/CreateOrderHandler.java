@@ -2,6 +2,7 @@ package com.ecommerce.service.core;
 
 import com.ecommerce.service.Marketplace;
 import com.ecommerce.model.entity.Order;
+import com.ecommerce.model.valueobject.OrderStatus;
 import java.util.ArrayList;
 
 public class CreateOrderHandler {
@@ -18,7 +19,7 @@ public class CreateOrderHandler {
         }
 
         // Cria uma nova instância pura de Order com status "CARRINHO_ABERTO"
-        Order newOrder = new Order(cmd.orderId(), cmd.userId(), new ArrayList<>(), "CARRINHO_ABERTO");
+        Order newOrder = new Order(cmd.orderId(), cmd.userId(), new ArrayList<>(), OrderStatus.CARRINHO_ABERTO);
 
         // Persiste incrementalmente no arquivo orders.jsonl e atualiza o cache
         marketplace.saveOrder(newOrder);

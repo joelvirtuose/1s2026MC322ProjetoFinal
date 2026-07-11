@@ -1,46 +1,33 @@
 package com.ecommerce.view;
 
-import org.jline.reader.impl.completer.StringsCompleter;
 import com.ecommerce.view.statescli.ViewState;
 import com.ecommerce.view.statescli.menus.LoginState;
 import com.ecommerce.service.Marketplace;
 
 public class NexusCLI {
-    private final PromptService promptService;
-    private final Marketplace marketplace;
+    private final PromptService prompt;
     private ViewState currentState;
 
-    public NexusCLI(PromptService promptService, Marketplace marketplace) {
-        this.promptService = promptService;
-        this.marketplace = marketplace;
-        this.currentState = new LoginState(marketplace); // Estado inicial obrigatório
+    public NexusCLI(Marketplace marketplace) {
+        this.prompt = new PromptService();
+        // O ponto de entrada da aplicação é o Login
+        this.currentState = new LoginState(marketplace);
     }
 
-    public void run() {
-        while (true) {
-            try {
-                // Sincroniza dinamicamente o autocompletar do JLine com o estado ativo
-                StringsCompleter dynamicCompleter = new StringsCompleter(currentState.getAutocompleteCommands());
-                promptService.setActiveCompleter(dynamicCompleter);
-
-                // Fluxo de execução polimórfico controlado puramente por retornos do State
-                currentState.renderHeader(promptService);
-                ViewState nextState = currentState.handleInput(promptService);
-
-                // Se o estado retornar nulo, quebra o laço e encerra a aplicação de forma limpa
-                if (nextState == null) {
-                    promptService.printSuccess("Ecossistema Nexus E-Commerce finalizado com sucesso.");
-                    break;
-                }
-
-                currentState = nextState;
-
-            } catch (Exception ex) {
-                // BARREIRA DE RESILIÊNCIA: Captura exceções de domínio e impede o crash do sistema
-                promptService.printError("Falha de Validação: " + ex.getMessage());
-                promptService.printWarning("Retornando em segurança ao menu operacional...");
-                promptService.readString("Pressione ENTER para continuar...");
-            }
+    public void start() {
+        // Loop polimórfico de execução da CLI baseada em estados (State Pattern)
+        while (currentState != null) {
+            // 1. Atualiza dinamicamente o JLine com os comandos aceitos pelo menu atual
+            prompt.updateCompleters(currentState.getAutocompleteCommands());
+            
+            // 2. Renderiza os componentes visuais
+            currentState.renderHeader(prompt);
+            
+            // 3. Captura a entrada, processa regras do domínio e transiciona de estado
+            currentState = currentState.handleInput(prompt);
         }
+        
+        prompt.clearScreen();
+        System.out.println("Obrigado por utilizar o Nexus E-Commerce. Aplicação encerrada com sucesso.");
     }
 }

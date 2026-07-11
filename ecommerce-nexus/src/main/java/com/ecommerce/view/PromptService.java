@@ -2,14 +2,18 @@ package com.ecommerce.view;
 
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.Completer;
 import org.jline.reader.impl.completer.AggregateCompleter;
 import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
+import org.jline.reader.UserInterruptException;
+import org.jline.reader.EndOfFileException;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 /**
  * Serviço responsável por encapsular toda a lógica de Input/Output do terminal.
@@ -18,30 +22,74 @@ import java.util.List;
 public class PromptService {
     private Terminal terminal;
     private LineReader lineReader;
-
-    // Lista dinâmica mutável associada ao leitor persistente do terminal
-    private final List<StringsCompleter> dynamicCompleters = new ArrayList<>();
-
-    // Códigos ANSI para cores no terminal
-    private static final String RESET = "\u001B[0m";
-    private static final String RED = "\u001B[31m";
-    private static final String GREEN = "\u001B[32m";
-    private static final String YELLOW = "\u001B[33m";
-    private static final String CYAN = "\u001B[36m";
+    // Mantemos uma lista dinâmica de completers na memória do serviço
+    private final List<Completer> dynamicCompleters;
 
     public PromptService() {
         try {
             // Constrói o terminal capturando o console nativo do Sistema Operacional
             this.terminal = TerminalBuilder.builder().system(true).build();
+            this.dynamicCompleters = new ArrayList<>();
+
+            // Criamos o aggregate completer acoplado à nossa lista mutável
+            Completer rootCompleter = (reader, line, candidates) -> {
+                for (Completer c : dynamicCompleters) {
+                    c.complete(reader, line, candidates);
+                }
+            };
             
-            // Cria um agregador que observa referências mutáveis sem precisar recriar o LineReader
+            // O lineReader é construído APENAS UMA VEZ aqui
             this.lineReader = LineReaderBuilder.builder()
                     .terminal(terminal)
-                    .completer(new AggregateCompleter(dynamicCompleters))
+                    .completer(rootCompleter)
                     .build();
         } catch (IOException e) {
-            System.err.println("Erro crítico ao inicializar o terminal interativo: " + e.getMessage());
-            System.exit(1);
+            throw new RuntimeException("Não foi possível inicializar o terminal JLine", e);
+        }
+    }
+
+    /**
+     * Atualiza dinamicamente os completers do JLine dependendo do estado da View ativa.
+     * Resolve o erro de tipagem forçando a conversão limpa para array de interfaces.
+     */
+    public void updateCompleters(List<String> commands) {
+        this.dynamicCompleters.clear();
+        if (commands != null && !commands.isEmpty()) {
+            this.dynamicCompleters.add(new StringsCompleter(commands));
+        }
+    }
+
+    public String readString(String promptLabel) {
+        try {
+            String input = lineReader.readLine(promptLabel);
+            return input == null ? "" : input.trim();
+        } catch (UserInterruptException | EndOfFileException e) {
+            // Captura o Ctrl+C/Ctrl+D e simula uma saída vazia ou comando de fechar
+            return "sair"; 
+        }
+    }
+
+    public String readMenuOption(String promptLabel) {
+        try {
+            String input = lineReader.readLine(promptLabel);
+            if (input != null && !input.trim().isEmpty()) {
+                return input.trim();
+            }
+        } catch (UserInterruptException | EndOfFileException e) {
+            return "sair"; // Se o usuário interromper, joga o comando "sair" para o estado atual
+        }
+
+        // Mantém o Fallback nativo caso o JLine não bloqueie o terminal
+        java.util.Scanner fallbackScanner = new java.util.Scanner(System.in);
+        while (true) {
+            System.out.print(promptLabel);
+            if (!fallbackScanner.hasNextLine()) {
+                return "sair";
+            }
+            String input = fallbackScanner.nextLine().trim();
+            if (!input.isEmpty()) {
+                return input;
+            }
         }
     }
 
@@ -51,47 +99,24 @@ public class PromptService {
     }
 
     public void printHeader(String title) {
-        System.out.println(CYAN + "========================================" + RESET);
-        System.out.println(CYAN + "  " + title + RESET);
-        System.out.println(CYAN + "========================================" + RESET);
+        System.out.println("=================================================================");
+        System.out.println(" >> " + title);
+        System.out.println("=================================================================");
     }
 
     public void printFooter() {
-        System.out.println(CYAN + "========================================\n" + RESET);
+        System.out.println("=================================================================");
     }
 
-    public void printInfo(String message) {
-        System.out.println(message);
-    }
+    public void printInfo(String message) { System.out.println("[INFO] " + message); }
+    public void printSuccess(String message) { System.out.println("\u001B[32m[SUCESSO] " + message + "\u001B[0m"); }
+    public void printWarning(String message) { System.out.println("\u001B[33m[AVISO] " + message + "\u001B[0m"); }
+    public void printError(String message) { System.out.println("\u001B[31m[ERRO] " + message + "\u001B[0m"); }
 
-    public void printSuccess(String message) {
-        System.out.println(GREEN + "[SUCESSO] " + message + RESET);
-    }
-
-    public void printWarning(String message) {
-        System.out.println(YELLOW + "[AVISO] " + message + RESET);
-    }
-
-    public void printError(String message) {
-        System.out.println(RED + "[ERRO] " + message + RESET);
-    }
-
-    public void printNumberedList(String title, List<String> items) {
-        System.out.println(title);
-        for (int i = 0; i < items.size(); i++) {
-            System.out.println(CYAN + " [" + (i + 1) + "] " + RESET + items.get(i));
+    public void printNumberedList(String label, List<String> options) {
+        System.out.println(label);
+        for (int i = 0; i < options.size(); i++) {
+            System.out.println("  [" + (i + 1) + "] " + options.get(i));
         }
-    }
-
-    public String readString(String prompt) {
-        return lineReader.readLine(prompt).trim();
-    }
-
-    /**
-     * ATUALIZAÇÃO SEGURA: Altera o comportamento do autocompletar sem quebrar o estado interno da thread do JLine
-     */
-    public void setActiveCompleter(StringsCompleter completer) {
-        this.dynamicCompleters.clear();
-        this.dynamicCompleters.add(completer);
     }
 }

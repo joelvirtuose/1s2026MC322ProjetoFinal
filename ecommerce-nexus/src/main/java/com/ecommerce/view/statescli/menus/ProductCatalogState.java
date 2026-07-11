@@ -40,7 +40,7 @@ public class ProductCatalogState implements ViewState {
 
     @Override
     public ViewState handleInput(PromptService prompt) {
-        String input = prompt.readString("\nDigite 'voltar' para retornar ao menu principal: ");
+        String input = prompt.readMenuOption("\nDigite 'voltar' para retornar ao menu principal: ");
         
         if (input.equalsIgnoreCase("voltar")) {
             // Transição polimórfica de volta para o menu principal

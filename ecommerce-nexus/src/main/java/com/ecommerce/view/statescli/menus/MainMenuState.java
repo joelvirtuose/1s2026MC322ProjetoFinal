@@ -28,7 +28,7 @@ public class MainMenuState implements ViewState {
 
     @Override
     public ViewState handleInput(PromptService prompt) {
-        String choice = prompt.readString("Opção > ");
+        String choice = prompt.readMenuOption("Opção > ");
 
         switch (choice) {
             case "1":

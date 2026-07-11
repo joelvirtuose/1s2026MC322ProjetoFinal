@@ -22,7 +22,7 @@ public class LoginState implements ViewState {
 
     @Override
     public ViewState handleInput(PromptService prompt) {
-        String input = prompt.readString("Utilizador/E-mail: ");
+        String input = prompt.readMenuOption("Utilizador/E-mail: ");
 
         if (input.equalsIgnoreCase("sair")) {
             return null; // Encerra graciosamente a aplicação
