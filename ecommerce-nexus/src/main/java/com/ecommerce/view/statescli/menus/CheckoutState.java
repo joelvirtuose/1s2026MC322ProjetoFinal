@@ -4,6 +4,7 @@ import com.ecommerce.view.PromptService;
 import com.ecommerce.view.statescli.ViewState;
 import com.ecommerce.service.Marketplace;
 import com.ecommerce.model.entity.User;
+import com.ecommerce.model.valueobject.PaymentMethod;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,7 @@ public class CheckoutState implements ViewState {
     private final Marketplace marketplace;
     private final User loggedUser;
     private final Map<String, Integer> cartItems;
+    private String couponCode; // opcional; null = sem cupom
 
     public CheckoutState(Marketplace marketplace, User loggedUser) {
         this.marketplace = marketplace;
@@ -31,16 +33,25 @@ public class CheckoutState implements ViewState {
             cartItems.forEach((id, qtd) ->
                 prompt.printInfo(String.format(" - Produto ID: %s | Quantidade: %d", id, qtd)));
         }
+        if (couponCode != null) {
+            prompt.printInfo("Cupom aplicado: " + couponCode);
+        }
         prompt.printFooter();
     }
 
     @Override
     public ViewState handleInput(PromptService prompt) {
-        prompt.printInfo("Opções: [ID do Produto] para adicionar | [finalizar] | [cancelar]");
+        prompt.printInfo("Opções: [ID do Produto] adicionar | [cupom] | [finalizar] | [cancelar]");
         String input = prompt.readMenuOption("Comando > ");
 
         if (input.equalsIgnoreCase("cancelar")) {
             return new MainMenuState(marketplace, loggedUser);
+        }
+
+        if (input.equalsIgnoreCase("cupom")) {
+            String code = prompt.readString("Código do cupom (ENTER para remover): ");
+            this.couponCode = code.isBlank() ? null : code.trim();
+            return this;
         }
 
         if (input.equalsIgnoreCase("finalizar")) {
@@ -50,12 +61,14 @@ public class CheckoutState implements ViewState {
                 return this;
             }
             try {
-                marketplace.checkout(loggedUser.getId(), cartItems);
+                // Pagamento via PIX por padrão; cupom aplicado se houver.
+                marketplace.checkout(loggedUser.getId(), cartItems, couponCode, PaymentMethod.PIX);
                 prompt.printSuccess("Pedido submetido com sucesso!");
                 prompt.readString("Pressione ENTER para voltar ao menu principal...");
                 return new MainMenuState(marketplace, loggedUser);
             } catch (Exception e) {
-                // Barreira de resiliência: captura falhas de negócio subindo da fachada.
+                // Barreira de resiliência: cupom inválido, pagamento recusado ou estoque
+                // insuficiente sobem até aqui e são exibidos sem derrubar a aplicação.
                 prompt.printError("Falha ao processar pedido: " + e.getMessage());
                 prompt.readString("Pressione ENTER para revisar seu carrinho...");
                 return this;
@@ -82,6 +95,6 @@ public class CheckoutState implements ViewState {
 
     @Override
     public List<String> getAutocompleteCommands() {
-        return List.of("finalizar", "cancelar");
+        return List.of("cupom", "finalizar", "cancelar");
     }
 }
