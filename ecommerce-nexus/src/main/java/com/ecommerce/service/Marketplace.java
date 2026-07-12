@@ -15,6 +15,8 @@ import com.ecommerce.service.core.AddItemToOrderCommand;
 import com.ecommerce.service.core.AddItemToOrderHandler;
 import com.ecommerce.service.core.DeductStockCommand;
 import com.ecommerce.service.core.UpdateStockHandler;
+import com.ecommerce.model.valueobject.PaymentMethod;
+import com.ecommerce.model.strategy.DiscountStrategy;
 
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,9 @@ public class Marketplace {
     private final CommandDispatcher dispatcher; // Invoker do padrão Command
     private final QueryService queryService;     // Consultas de leitura
 
+    private final PaymentService paymentService;
+    private final CouponService couponService;
+
     public Marketplace(Gson gson) {
         this.productRepository = new JsonlRepository<>("data/products.jsonl", Product.class, gson);
         this.orderRepository = new JsonlRepository<>("data/orders.jsonl", Order.class, gson);
@@ -45,6 +50,9 @@ public class Marketplace {
 
         // 'this' só é consultado em runtime, não durante a construção (seguro).
         this.queryService = new QueryServiceImpl(this);
+
+        this.paymentService = new PaymentServiceImpl();
+        this.couponService = new CouponServiceImpl();
     }
 
     // ---- Acesso a entidades (usado pelos handlers) ----
@@ -75,13 +83,23 @@ public class Marketplace {
     }
 
     // ---- Fluxo de negócio de checkout ----
-     public void checkout(String userId, Map<String, Integer> items) throws Exception {
+    /** Sobrecarga de conveniência: mantém o fluxo original (sem cupom, PIX). */
+    public void checkout(String userId, Map<String, Integer> items) throws Exception {
+        checkout(userId, items, null, PaymentMethod.PIX);
+    }
+
+    /**
+     * Checkout completo com cupom opcional e autorização de pagamento.
+     * Tudo é validado ANTES de qualquer gravação (atômico): estoque, cupom e pagamento.
+     */
+    public void checkout(String userId, Map<String, Integer> items,
+                         String couponCode, PaymentMethod method) throws Exception {
         if (items == null || items.isEmpty()) {
             throw new com.ecommerce.exception.EmptyCartException("Não é possível fechar um pedido vazio.");
         }
 
-        // FASE 1 - VALIDAÇÃO PRÉVIA: nenhum estado é alterado aqui.
-        // Só efetivamos o pedido se TODOS os itens existirem e tiverem estoque.
+        // FASE 1 - validação prévia de estoque + cálculo do total (nada é alterado ainda).
+        double total = 0.0;
         for (Map.Entry<String, Integer> entry : items.entrySet()) {
             Product product = getProduct(entry.getKey());
             if (product == null) {
@@ -92,9 +110,19 @@ public class Marketplace {
                 throw new com.ecommerce.exception.InsufficientStockException(
                     "Estoque insuficiente para o produto: " + product.getName());
             }
+            total += product.getPrice() * entry.getValue();
         }
 
-        // FASE 2 - EFETIVAÇÃO: só chega aqui se a fase 1 passou por completo.
+        // FASE 2 - cupom opcional: código inválido interrompe aqui (InvalidCouponException).
+        if (couponCode != null && !couponCode.isBlank()) {
+            DiscountStrategy strategy = couponService.resolve(couponCode);
+            total = strategy.calculate(total);
+        }
+
+        // FASE 3 - autorização de pagamento: recusa interrompe aqui (PaymentDeclinedException).
+        paymentService.authorize(total, method);
+
+        // FASE 4 - efetivação: só chega aqui se estoque, cupom e pagamento passaram.
         String orderId = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         dispatch(new CreateOrderCommand(orderId, userId));
         for (Map.Entry<String, Integer> entry : items.entrySet()) {
